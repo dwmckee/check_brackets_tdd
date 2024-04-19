@@ -1,4 +1,4 @@
 BasedOnStyle: WebKit
 IndentWidth: 4
-
+BreakBeforeBraces: Allman
 BreakConstructorInitializers: BeforeComma
