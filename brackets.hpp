@@ -15,8 +15,14 @@ enum class status
     mismatch
 };
 
-status check(std::istream& is);
+struct result
+{
+    status code = status::ok;
+    size_t column = 0;
+    size_t line = 1;
+};
 
+result check(std::istream& is);
 }
 
 #endif // BRACKETS_HPP

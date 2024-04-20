@@ -19,53 +19,75 @@ static const std::map<char, char> matches_for = {
     { ')', '(' }, { ']', '[' }, { '}', '{' }
 };
 
-brackets::status brackets::check(std::istream& is)
+brackets::result brackets::check(std::istream& is)
 {
+    result theResult;
+
     if (!is)
-        return status::stream_error;
+    {
+        theResult.code = status::stream_error;
+        return theResult;
+    }
 
     std::stack<char, std::vector<char>> stack;
 
     std::istream::char_type c;
     while (is.get(c))
     {
+        if (c == '\n')
+        {
+            ++theResult.line;
+            theResult.column = 0;
+        }
+        else
+            ++theResult.column;
+
         const auto it = matches_for.find(c);
         if (it != matches_for.end())
         {
-            if (it->second == '\0')
+            if (it->second == '\0') // open symbols are easy
                 stack.push(c);
-            else if (stack.empty())
-                return status::extra_close;
-            else if (stack.top() == it->second)
+            else if (stack.empty()) // close symbol with an empty stack
+            {
+                theResult.code = status::extra_close;
+                return theResult;
+            }
+            else if (stack.top() == it->second) // correct pending open
                 stack.pop();
             else
-                return status::mismatch;
+            {
+                theResult.code = status::mismatch;
+                return theResult;
+            }
         }
     }
 
     if (!stack.empty())
-        return status::left_open;
+        theResult.code = status::left_open;
 
-    return status::ok;
+    return theResult;
 }
 
 TEST_CASE("Brackets matching")
 {
     SUBCASE("correct")
     {
-        std::map<std::string, std::string> data = {
-            { "Empty input", "" },
-            { "Sequential pairs", "()[]{}" },
-            { "Nested pairs", "([{{()}}])" },
-            { "Really mixed case", "([]{(()[])})" },
+        const std::vector<std::tuple<std::string, std::string, size_t, size_t>> data = {
+            { "Empty input", "", 1, 0 },
+            { "Sequential pairs", "()[]{}", 1, 6 },
+            { "Nested pairs", "([{{()}}])", 1, 10 },
+            { "Really mixed case", "(\n[]  {((\n\n)[]\n)})", 5, 3 },
         };
 
-        for (const auto& [key, value] : data)
+        for (const auto& [key, value, line, column] : data)
         {
             CAPTURE(key);
             CAPTURE(value);
             std::istringstream is(value);
-            CHECK(brackets::check(is) == brackets::status::ok);
+            const auto r = brackets::check(is);
+            CHECK(r.code == brackets::status::ok);
+            CHECK(r.line == line);
+            CHECK(r.column == column);
         }
     }
 
@@ -73,23 +95,26 @@ TEST_CASE("Brackets matching")
     {
         const std::vector<std::tuple<std::string,
             std::string,
-            brackets::status>>
+            brackets::status,
+            size_t,
+            size_t>>
             data = {
-                { "Lone close"s, ")"s, brackets::status::extra_close },
-                { "Lone open"s, "["s, brackets::status::left_open },
-                { "Simple mismatch"s, "{]"s, brackets::status::mismatch },
-                { "Mis-ordered pair"s, "}{"s, brackets::status::extra_close },
-                { "Mis-ordered nesting"s, "({)}"s, brackets::status::mismatch },
+                { "Lone close"s, ")"s, brackets::status::extra_close, 1, 1 },
+                { "Lone open"s, "["s, brackets::status::left_open, 1, 1 },
+                { "Simple mismatch"s, "{]"s, brackets::status::mismatch, 1, 2 },
+                { "Mis-ordered pair"s, "}{"s, brackets::status::extra_close, 1, 1 },
+                { "Mis-ordered nesting"s, "({)}"s, brackets::status::mismatch, 1, 3 },
             };
 
-        for (const auto& [key,
-                 value,
-                 expected_result] : data)
+        for (const auto& [key, value, expected_result, line, column] : data)
         {
             CAPTURE(key);
             CAPTURE(value);
             std::istringstream is(value);
-            CHECK(brackets::check(is) == expected_result);
+            const auto r = brackets::check(is);
+            CHECK(r.code == expected_result);
+            CHECK(r.line == line);
+            CHECK(r.column == column);
         }
     }
 }
