@@ -17,7 +17,8 @@ int main(int argc, char* argv[])
         {
             final_status = EXIT_FAILURE;
             std::cerr << "Error: " << argv[i]
-                      << ":" << result.line
+		      << ": " << brackets::status_string(result.code)
+                      << " at " << result.line
                       << ":" << result.column << std::endl;
         }
     }

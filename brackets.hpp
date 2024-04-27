@@ -2,6 +2,7 @@
 #define BRACKETS_HPP
 
 #include <iosfwd>
+#include <string_view>
 
 namespace brackets
 {
@@ -14,6 +15,8 @@ enum class status
     left_open,
     mismatch
 };
+
+  std::string_view status_string(status s);
 
 struct result
 {

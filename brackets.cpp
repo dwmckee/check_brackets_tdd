@@ -6,6 +6,7 @@
 #include <iostream>
 #include <map>
 #include <stack>
+#include <string>
 #include <vector>
 // Needed for testing, not for the main implementation
 #include <sstream>
@@ -18,6 +19,20 @@ static const std::map<char, char> matches_for = {
     { '(', '\0' }, { '[', '\0' }, { '{', '\0' },
     { ')', '(' }, { ']', '[' }, { '}', '{' }
 };
+
+static const std::map<brackets::status, std::string> status_strings = {
+  {brackets::status::ok, "OK"s},
+  {brackets::status::stream_error, "Bad stream"s},
+  {brackets::status::extra_close, "Close symbol without open"s},
+  {brackets::status::left_open, "Reached end with unclosed symbols"s},
+  {brackets::status::mismatch, "Mismatch"s},
+};
+
+std::string_view brackets::status_string(brackets::status s)
+{
+  return status_strings.at(s);
+}
+
 
 brackets::result brackets::check(std::istream& is)
 {
