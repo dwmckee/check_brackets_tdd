@@ -1,9 +1,7 @@
 # check_brackets_tdd
 
-A Practice problem for learning Test Driven Design(TDD).
-
-Probably there are sample problems out there, but I've thought of one of
-my own: I'm going to 
+A practice problem for learning Test Driven Design (TDD). Probably there
+are sample problems out there, but I've thought of one of my own.
 
 ## The Project
 
@@ -17,13 +15,15 @@ to your programming environment.
 
 I'll be writing a traditional command-line program, so that means
 accepting filename arguments on the command line and writing messages to
-the standard output or standard error.
+the standard output or standard error. If you use a different
+environment feel free to make different choices.
 
 #### Stages
 
-1. Work on a fixed set of bracket pairs ((), [], and {}) and reports the
-filename of each file that has an error. The program will be silent by
-default on correct files. A report-on-correct switch is optional.
+1. Works on a fixed set of bracket pairs (`()`, `[]`, and `{}`) and
+reports the filename of each file that has an error. The program will be
+silent by default on correct files. A report-on-correct switch is
+optional.
 
 2. Expand the error report to include the line and column number at
 which the error was detected.
@@ -40,7 +40,13 @@ open/close pairs (including canceling or overriding the default pairs).
 Attempting to specify a single character more than once represents a
 error and suitable diagnostic must be produced.
 
-5. Allow a single character (such as ' or ") to server as both open and
-close for a pair; note that these pairs can not nest without an
-intervening scope. That is 'a'b'c' has two single levels pairs not one
-pair inside another, but 'a"b'c'd"e' is three levels deep.
+5. Allow a single character (such as `'` or `"`) to server as both open and
+close for a pair; note that these pairs cannot nest without an
+intervening scope. That is `'a'b'c'` has two single levels pairs not one
+pair inside another, but `'a"b'c'd"e'` is three levels deep.
+
+### Test
+
+The test suite developed along the way should be as comprehensive as
+reasonably achievable. It may be necessary to use more than one testing
+mechanism to achieve this.
