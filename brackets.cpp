@@ -43,13 +43,13 @@ std::istream& operator>>(std::istream& is, brackets::code_reference& cr)
             cr.column = 0;
         }
         else
-	  {
-              ++cr.column;
-	  }
-      }
+        {
+            ++cr.column;
+        }
+    }
 
-      return is;
-  }
+    return is;
+}
 
 brackets::result brackets::check(std::istream& is)
 {
@@ -66,15 +66,15 @@ brackets::result brackets::check(std::istream& is)
     {
         const auto it = matches_for.find(currentRef.c);
         if (it == matches_for.end()) // Not part of a pair
-	    ; // no-op
-	else if (it->second == '\0') // open symbols are easy
-	    stack.push(currentRef);
-	else if (stack.empty()) // close symbol with an empty stack
-	    return { status::extra_close, currentRef, {} };
-	else if (stack.top().c != it->second) // wrong close symbol
-	    return { status::mismatch, currentRef, stack.top() };
-	else // Right close symbol
-	    stack.pop();
+            ; // no-op
+        else if (it->second == '\0') // open symbols are easy
+            stack.push(currentRef);
+        else if (stack.empty()) // close symbol with an empty stack
+            return { status::extra_close, currentRef, {} };
+        else if (stack.top().c != it->second) // wrong close symbol
+            return { status::mismatch, currentRef, stack.top() };
+        else // Right close symbol
+            stack.pop();
     }
 
     if (!stack.empty())
@@ -113,11 +113,11 @@ TEST_CASE("Brackets matching")
             brackets::status,
             brackets::code_reference>>
             data = {
-                { "Lone close"s, ")"s, brackets::status::extra_close, { 1, 1 } },
-                { "Lone open"s, "["s, brackets::status::left_open, { 1, 1 } },
-                { "Simple mismatch"s, "{]"s, brackets::status::mismatch, { 2, 1 } },
-                { "Mis-ordered pair"s, "}{"s, brackets::status::extra_close, { 1, 1 } },
-                { "Mis-ordered nesting"s, "({)}"s, brackets::status::mismatch, { 3, 1 } },
+	  { "Lone close"s, ")"s, brackets::status::extra_close, { 1, 1, ')' } },
+	  { "Lone open"s, "["s, brackets::status::left_open, { 1, 1, '['} },
+	  { "Simple mismatch"s, "{]"s, brackets::status::mismatch, { 2, 1, ']' } },
+	  { "Mis-ordered pair"s, "}{"s, brackets::status::extra_close, { 1, 1, '}' } },
+	  { "Mis-ordered nesting"s, "({)}"s, brackets::status::mismatch, { 3, 1, ')' } },
             };
 
         for (const auto& [key, value, code, ref] : data)
@@ -129,6 +129,7 @@ TEST_CASE("Brackets matching")
             CHECK(r.code == code);
             CHECK(r.error_ref.line == ref.line);
             CHECK(r.error_ref.column == ref.column);
+	    CHECK(r.error_ref.c == ref.c);
         }
     }
 }
