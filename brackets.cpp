@@ -21,115 +21,109 @@ static const std::map<char, char> matches_for = {
 };
 
 static const std::map<brackets::status, std::string> status_strings = {
-  {brackets::status::ok, "OK"s},
-  {brackets::status::stream_error, "Bad stream"s},
-  {brackets::status::extra_close, "Close symbol without open"s},
-  {brackets::status::left_open, "Reached end with unclosed symbols"s},
-  {brackets::status::mismatch, "Mismatch"s},
+    { brackets::status::ok, "OK"s },
+    { brackets::status::stream_error, "Bad stream"s },
+    { brackets::status::extra_close, "Close symbol without open"s },
+    { brackets::status::left_open, "Reached end with unclosed symbols"s },
+    { brackets::status::mismatch, "Mismatch"s },
 };
 
 std::string_view brackets::status_string(brackets::status s)
 {
-  return status_strings.at(s);
+    return status_strings.at(s);
 }
-
 
 brackets::result brackets::check(std::istream& is)
 {
-    result theResult;
-
+    code_reference currentRef;
+    
     if (!is)
     {
-        theResult.code = status::stream_error;
-        return theResult;
+        return {status::stream_error, currentRef, {}};
     }
 
-    std::stack<char, std::vector<char>> stack;
+    std::stack<code_reference, std::vector<code_reference>> stack;
 
-    std::istream::char_type c;
-    while (is.get(c))
+    while (is.get(currentRef.c))
     {
-        if (c == '\n')
+        if (currentRef.c == '\n')
         {
-            ++theResult.line;
-            theResult.column = 0;
+            ++currentRef.line;
+            currentRef.column = 0;
         }
         else
-            ++theResult.column;
+            ++currentRef.column;
 
-        const auto it = matches_for.find(c);
+        const auto it = matches_for.find(currentRef.c);
         if (it != matches_for.end())
         {
             if (it->second == '\0') // open symbols are easy
-                stack.push(c);
+                stack.push(currentRef);
             else if (stack.empty()) // close symbol with an empty stack
             {
-                theResult.code = status::extra_close;
-                return theResult;
+                return {status::extra_close, currentRef, {}};
             }
-            else if (stack.top() == it->second) // correct pending open
+            else if (stack.top().c == it->second) // correct pending open
                 stack.pop();
             else
             {
-                theResult.code = status::mismatch;
-                return theResult;
+                return {status::mismatch, currentRef, stack.top()};
             }
         }
     }
 
     if (!stack.empty())
-        theResult.code = status::left_open;
+      return {status::left_open, currentRef, stack.top()};
 
-    return theResult;
+    return {status::ok, currentRef, {}};
 }
 
 TEST_CASE("Brackets matching")
 {
     SUBCASE("correct")
     {
-        const std::vector<std::tuple<std::string, std::string, size_t, size_t>> data = {
-            { "Empty input", "", 1, 0 },
-            { "Sequential pairs", "()[]{}", 1, 6 },
-            { "Nested pairs", "([{{()}}])", 1, 10 },
-            { "Really mixed case", "(\n[]  {((\n\n)[]\n)})", 5, 3 },
+      const std::vector<std::tuple<std::string, std::string, brackets::code_reference>> data = {
+	{ "Empty input", "", {0, 1} },
+	{ "Sequential pairs", "()[]{}", {6, 1} },
+	{ "Nested pairs", "([{{()}}])", {10, 1} },
+	{ "Really mixed case", "(\n[]  {((\n\n)[]\n)})", {3, 5} },
         };
 
-        for (const auto& [key, value, line, column] : data)
+      for (const auto& [key, value, ref] : data)
         {
             CAPTURE(key);
             CAPTURE(value);
             std::istringstream is(value);
             const auto r = brackets::check(is);
             CHECK(r.code == brackets::status::ok);
-            CHECK(r.line == line);
-            CHECK(r.column == column);
+            CHECK(r.error_ref.line == ref.line);
+            CHECK(r.error_ref.column == ref.column);
         }
     }
 
     SUBCASE("mistakes")
     {
-        const std::vector<std::tuple<std::string,
+        const std::vector < std::tuple < std::string,
             std::string,
-            brackets::status,
-            size_t,
-            size_t>>
+					 brackets::status,
+					 brackets::code_reference>>
             data = {
-                { "Lone close"s, ")"s, brackets::status::extra_close, 1, 1 },
-                { "Lone open"s, "["s, brackets::status::left_open, 1, 1 },
-                { "Simple mismatch"s, "{]"s, brackets::status::mismatch, 1, 2 },
-                { "Mis-ordered pair"s, "}{"s, brackets::status::extra_close, 1, 1 },
-                { "Mis-ordered nesting"s, "({)}"s, brackets::status::mismatch, 1, 3 },
+                { "Lone close"s, ")"s, brackets::status::extra_close, {1, 1} },
+                { "Lone open"s, "["s, brackets::status::left_open, {1, 1} },
+                { "Simple mismatch"s, "{]"s, brackets::status::mismatch, {2, 1} },
+                { "Mis-ordered pair"s, "}{"s, brackets::status::extra_close, {1, 1} },
+                { "Mis-ordered nesting"s, "({)}"s, brackets::status::mismatch, {3, 1} },
             };
 
-        for (const auto& [key, value, expected_result, line, column] : data)
+        for (const auto& [key, value, code, ref] : data)
         {
             CAPTURE(key);
             CAPTURE(value);
             std::istringstream is(value);
             const auto r = brackets::check(is);
-            CHECK(r.code == expected_result);
-            CHECK(r.line == line);
-            CHECK(r.column == column);
+            CHECK(r.code == code);
+            CHECK(r.error_ref.line == ref.line);
+            CHECK(r.error_ref.column == ref.column);
         }
     }
 }
