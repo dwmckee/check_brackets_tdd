@@ -87,7 +87,9 @@ TEST_CASE("Brackets matching")
 {
     SUBCASE("correct")
     {
-        const std::vector<std::tuple<std::string, std::string, brackets::code_reference>> data = {
+      using namespace brackets;
+
+      const std::vector<std::tuple<std::string, std::string, code_reference>> data = {
             { "Empty input", "", { 0, 1 } },
             { "Sequential pairs", "()[]{}", { 6, 1 } },
             { "Nested pairs", "([{{()}}])", { 10, 1 } },
@@ -99,8 +101,8 @@ TEST_CASE("Brackets matching")
             CAPTURE(key);
             CAPTURE(value);
             std::istringstream is(value);
-            const auto r = brackets::check(is);
-            CHECK(r.code == brackets::status::ok);
+            const auto r = check(is);
+            CHECK(r.code == status::ok);
             CHECK(r.error_ref.line == ref.line);
             CHECK(r.error_ref.column == ref.column);
         }
@@ -108,28 +110,32 @@ TEST_CASE("Brackets matching")
 
     SUBCASE("mistakes")
     {
-        const std::vector<std::tuple<std::string,
+      using namespace brackets;
+      
+        const std::vector < std::tuple < std::string,
             std::string,
-            brackets::status,
-            brackets::code_reference>>
+	    result>>
             data = {
-	  { "Lone close"s, ")"s, brackets::status::extra_close, { 1, 1, ')' } },
-	  { "Lone open"s, "["s, brackets::status::left_open, { 1, 1, '['} },
-	  { "Simple mismatch"s, "{]"s, brackets::status::mismatch, { 2, 1, ']' } },
-	  { "Mis-ordered pair"s, "}{"s, brackets::status::extra_close, { 1, 1, '}' } },
-	  { "Mis-ordered nesting"s, "({)}"s, brackets::status::mismatch, { 3, 1, ')' } },
+	  { "Lone close"s, ")"s, {status::extra_close, { 1, 1, ')'}} },
+	  { "Lone open"s, "["s, {status::left_open, { 1, 1, '['}, {1, 1, '['}} },
+	  { "Simple mismatch"s, "{]"s, {status::mismatch, { 2, 1, ']'}, {1, 1, '{'}} },
+	  { "Mis-ordered pair"s, "}{"s, {status::extra_close, { 1, 1, '}'}} },
+	  { "Mis-ordered nesting"s, "({)}"s, {status::mismatch, { 3, 1, ')'}, {2, 1, '{'}} },
             };
 
-        for (const auto& [key, value, code, ref] : data)
+        for (const auto& [key, value, expected] : data)
         {
             CAPTURE(key);
             CAPTURE(value);
             std::istringstream is(value);
-            const auto r = brackets::check(is);
-            CHECK(r.code == code);
-            CHECK(r.error_ref.line == ref.line);
-            CHECK(r.error_ref.column == ref.column);
-	    CHECK(r.error_ref.c == ref.c);
+            const auto r = check(is);
+            CHECK(r.code == expected.code);
+            CHECK(r.error_ref.line == expected.error_ref.line);
+            CHECK(r.error_ref.column == expected.error_ref.column);
+            CHECK(r.error_ref.c == expected.error_ref.c);
+            CHECK(r.back_ref.line == expected.back_ref.line);
+            CHECK(r.back_ref.column == expected.back_ref.column);
+            CHECK(r.back_ref.c == expected.back_ref.c);
         }
     }
 }
