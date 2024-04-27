@@ -16,10 +16,8 @@ int main(int argc, char* argv[])
         if (result.code != brackets::status::ok)
         {
             final_status = EXIT_FAILURE;
-            std::cerr << "Error: " << argv[i]
-                      << ": " << brackets::status_string(result.code)
-                      << " at " << result.error_ref.line
-                      << ":" << result.error_ref.column << std::endl;
+            std::cerr << brackets::result_report(result, argv[i])
+                      << std::endl;
         }
     }
 

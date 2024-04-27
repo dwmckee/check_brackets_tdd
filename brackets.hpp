@@ -32,6 +32,8 @@ struct result
     code_reference back_ref;
 };
 
+std::string result_report(const result& res, std::string_view streamID);
+
 result check(std::istream& is);
 }
 
