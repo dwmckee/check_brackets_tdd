@@ -15,8 +15,8 @@ to your programming environment.
 
 I'll be writing a traditional command-line program, so that means
 accepting filename arguments on the command line and writing messages to
-the standard output or standard error. If you use a different
-environment feel free to make different choices.
+the standard output or standard error. If you work in a different
+environment, feel free to make other choices.
 
 #### Stages
 
@@ -49,4 +49,4 @@ pair inside another, but `'a"b'c'd"e'` is three levels deep.
 
 The test suite developed along the way should be as comprehensive as
 reasonably achievable. It may be necessary to use more than one testing
-mechanism to achieve this.
+mechanism to make this happen, which is OK.
