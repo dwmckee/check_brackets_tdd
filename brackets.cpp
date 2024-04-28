@@ -97,8 +97,8 @@ TEST_CASE("result reporting")
 {
     using namespace brackets;
 
-    constexpr code_reference ref1 { 2, 2, 'A' };
-    constexpr code_reference ref2 { 1, 1, 'B' };
+    constexpr code_reference ref1{2, 2, 'A'};
+    constexpr code_reference ref2{ 1, 1, 'B' };
     constexpr auto id = "ID";
 
     const std::vector<std::tuple<result, std::string>> data = {
