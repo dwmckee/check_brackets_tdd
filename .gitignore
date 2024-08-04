@@ -30,3 +30,11 @@
 *.exe
 *.out
 *.app
+
+# Tooling
+###
+subprojects/**         # Meson package handling is almost entirely tool-manages, ...
+subprojects/**/**
+!subprojects/*.wrap    # ...except that we write and maintain the .wrap files
+.cache/**              # clangd stores stuff here
+.cache/**/**
